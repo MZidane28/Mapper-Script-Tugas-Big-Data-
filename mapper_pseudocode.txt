@@ -1,0 +1,85 @@
+# PSEUDOCODE MAPPER - SISTEM REKOMENDASI PRODUK
+# Big Data dan Analitik (TIF522)
+# Author: Silmi Fauziati
+
+"""
+PSEUDOCODE UNTUK MAPPER FUNCTION
+==================================
+
+ALGORITMA: ItemPairMapper
+INPUT: transaction_data.csv (file CSV dengan format binary)
+OUTPUT: Pasangan item dengan frekuensi (key-value pairs)
+
+PROSEDUR mapper():
+    // LANGKAH 1: Inisialisasi dan Baca Header
+    BACA header dari input CSV
+    product_names ← header[1..n]  // Skip kolom pertama (Transaction ID)
+    
+    // LANGKAH 2: Proses Setiap Transaksi
+    UNTUK SETIAP line DALAM input CSV:
+        JIKA line kosong MAKA:
+            LANJUT ke iterasi berikutnya
+        
+        transaction_id ← line[0]
+        items_purchased ← [] // Array kosong untuk menyimpan produk yang dibeli
+        
+        // LANGKAH 3: Ekstrak Produk yang Dibeli
+        // Cari kolom dengan nilai 1 (produk yang dibeli)
+        UNTUK i = 0 SAMPAI panjang(line[1..n]):
+            JIKA line[i+1] == '1' MAKA:
+                TAMBAHKAN product_names[i] ke items_purchased
+        
+        // LANGKAH 4: Generate Pasangan Item (Item Pairs)
+        // Buat kombinasi semua pasangan produk
+        num_items ← panjang(items_purchased)
+        
+        UNTUK i = 0 SAMPAI num_items - 1:
+            UNTUK j = i + 1 SAMPAI num_items:
+                item1 ← items_purchased[i]
+                item2 ← items_purchased[j]
+                
+                // LANGKAH 5: Emit Key-Value Pair
+                // Urutkan item agar konsisten (item1 < item2)
+                JIKA item1 < item2 MAKA:
+                    EMIT (item1, item2, 1)
+                JIKA TIDAK:
+                    EMIT (item2, item1, 1)
+AKHIR PROSEDUR
+
+
+CONTOH EKSEKUSI:
+================
+
+INPUT (Transaksi 1):
+Transaction: 5
+Bread: 1, Coffee: 1, Pastry: 1
+(Artinya: Customer membeli Bread, Coffee, dan Pastry)
+
+PROSES:
+1. items_purchased = ["Bread", "Coffee", "Pastry"]
+2. Generate pasangan:
+   - i=0, j=1: Bread + Coffee   → EMIT ("Bread", "Coffee", 1)
+   - i=0, j=2: Bread + Pastry   → EMIT ("Bread", "Pastry", 1)
+   - i=1, j=2: Coffee + Pastry  → EMIT ("Coffee", "Pastry", 1)
+
+OUTPUT MAPPER:
+Bread	Coffee	1
+Bread	Pastry	1
+Coffee	Pastry	1
+
+
+KOMPLEKSITAS ALGORITMA:
+========================
+- Waktu: O(n × m²) dimana:
+  n = jumlah transaksi
+  m = rata-rata jumlah item per transaksi
+  
+- Ruang: O(m) untuk menyimpan items_purchased
+
+CATATAN:
+=========
+- Format output: TAB-separated values (item1 \t item2 \t count)
+- Pasangan item diurutkan secara leksikografis untuk konsistensi
+- Setiap pasangan di-emit dengan count = 1
+- Reducer akan menjumlahkan semua count untuk setiap pasangan
+"""
