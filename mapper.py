@@ -1,5 +1,4 @@
 import sys
-import csv
 
 def mapper():
     """
@@ -9,29 +8,29 @@ def mapper():
     1. Baca struk belanja (ambil produk yang dibeli)
     2. Buat semua kombinasi pasangan produk (item pairs)
     3. Emit pasangan dengan format: (item1, item2) -> 1
+    
+    Format input: setiap baris berisi produk yang dibeli, dipisahkan koma
+    Contoh: Bread,Coffee,Muffin
     """
     
-    # Baca header untuk mendapatkan nama produk
-    reader = csv.reader(sys.stdin)
-    header = next(reader)
-    product_names = header[1:]  # Skip kolom 'Transaction'
-    
-    # Proses setiap transaksi
-    for line in reader:
+    # Proses setiap transaksi (setiap baris)
+    for line in sys.stdin:
+        line = line.strip()
+        
+        # Skip baris kosong
         if not line:
             continue
-            
-        transaction_id = line[0]
-        items_purchased = []
         
-        # Ambil semua produk yang dibeli (nilai = 1)
-        for i, value in enumerate(line[1:], start=0):
-            if value.strip() == '1':
-                items_purchased.append(product_names[i])
+        # Split produk berdasarkan koma dan bersihkan whitespace
+        items_purchased = [item.strip() for item in line.split(',') if item.strip()]
+        
+        # Skip jika hanya ada 1 item atau kurang (tidak bisa buat pasangan)
+        if len(items_purchased) < 2:
+            continue
         
         # Generate semua pasangan produk dari transaksi ini
-        # Contoh: jika beli [Roti, Susu, Telur]
-        # Maka emit: (Roti, Susu), (Roti, Telur), (Susu, Telur)
+        # Contoh: jika beli [Bread, Coffee, Muffin]
+        # Maka emit: (Bread, Coffee), (Bread, Muffin), (Coffee, Muffin)
         num_items = len(items_purchased)
         for i in range(num_items):
             for j in range(i + 1, num_items):
