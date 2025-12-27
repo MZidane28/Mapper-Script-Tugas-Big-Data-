@@ -1,0 +1,142 @@
+```plaintext
+# PSEUDOCODE REDUCER - SISTEM REKOMENDASI PRODUK
+# Big Data dan Analitik (TIF522)
+
+"""
+PSEUDOCODE UNTUK REDUCER FUNCTION
+==================================
+
+ALGORITMA: ItemPairAggregator
+INPUT: Output dari mapper (sorted key-value pairs)
+       Format: item1\titem2\tcount
+OUTPUT: Pasangan item dengan total frekuensi kemunculannya
+
+PROSEDUR reducer():
+    // LANGKAH 1: Inisialisasi Variabel
+    current_key ← NULL
+    current_count ← 0
+    
+    // LANGKAH 2: Proses Setiap Baris Input dari Mapper
+    UNTUK SETIAP line DALAM input stdin:
+        
+        // LANGKAH 3: Skip baris kosong
+        JIKA line kosong MAKA:
+            LANJUT ke iterasi berikutnya
+        
+        // LANGKAH 4: Parse dan Ekstrak Data
+        SPLIT line BERDASARKAN tab (\t)
+        item1 ← parts[0]
+        item2 ← parts[1]
+        count ← KONVERSI parts[2] KE integer
+        
+        // LANGKAH 5: Buat Key dari Pasangan Item
+        key ← item1 + "\t" + item2
+        
+        // LANGKAH 6: Deteksi Perubahan Key
+        JIKA current_key TIDAK NULL DAN current_key ≠ key MAKA:
+            // EMIT hasil aggregasi untuk key sebelumnya
+            PRINT current_key + "\t" + current_count
+        
+        // LANGKAH 7: Update Key dan Akumulasi Count
+        JIKA current_key ≠ key MAKA:
+            current_key ← key
+            current_count ← 0
+        
+        // LANGKAH 8: Aggregasi (Penjumlahan)
+        current_count ← current_count + count
+    
+    // LANGKAH 9: Emit Hasil Terakhir
+    JIKA current_key TIDAK NULL MAKA:
+        PRINT current_key + "\t" + current_count
+    
+AKHIR PROSEDUR
+
+
+CONTOH EKSEKUSI:
+================
+
+INPUT (dari mapper yang sudah di-sort):
+Bread	Coffee	1
+Bread	Coffee	1
+Bread	Coffee	1
+Bread	Pastry	1
+Bread	Pastry	1
+Coffee	Pastry	1
+
+PROSES:
+Line 1: key = "Bread\tCoffee", count = 1
+        current_key = "Bread\tCoffee", current_count = 1
+
+Line 2: key = "Bread\tCoffee", count = 1
+        current_key tetap sama → current_count = 1 + 1 = 2
+
+Line 3: key = "Bread\tCoffee", count = 1
+        current_key tetap sama → current_count = 2 + 1 = 3
+
+Line 4: key = "Bread\tPastry", count = 1
+        current_key berubah! → EMIT "Bread\tCoffee\t3"
+        current_key = "Bread\tPastry", current_count = 1
+
+Line 5: key = "Bread\tPastry", count = 1
+        current_key tetap sama → current_count = 1 + 1 = 2
+
+Line 6: key = "Coffee\tPastry", count = 1
+        current_key berubah! → EMIT "Bread\tPastry\t2"
+        current_key = "Coffee\tPastry", current_count = 1
+
+EOF: EMIT "Coffee\tPastry\t1"
+
+OUTPUT REDUCER:
+Bread	Coffee	3
+Bread	Pastry	2
+Coffee	Pastry	1
+
+
+PENJELASAN LOGIKA:
+==================
+
+1. SORTED INPUT REQUIREMENT:
+   - Input dari mapper HARUS sudah terurut berdasarkan key
+   - Hadoop secara otomatis melakukan sorting sebelum reducer
+   - Ini memungkinkan reducer melakukan single-pass aggregation
+
+2. AGGREGATION LOGIC:
+   - Jika key sama, lanjut akumulasi count
+   - Jika key berbeda, emit key lama + count total-nya
+   - Pastikan emit hasil terakhir setelah loop selesai
+
+3. MEMORY EFFICIENCY:
+   - Hanya menyimpan 1 key dan counter di memory
+   - Tidak perlu hash table atau struktur data besar
+   - O(1) space complexity per key-value pair
+
+4. OUTPUT INTERPRETATION:
+   - "Bread\tCoffee\t3" = Pasangan (Bread, Coffee) muncul 3 transaksi
+   - Angka ini adalah nilai support dalam market basket analysis
+
+
+KOMPLEKSITAS ALGORITMA:
+========================
+- Waktu: O(n) dimana n = jumlah baris input dari mapper
+- Ruang: O(1) hanya menyimpan current_key dan current_count
+
+KARAKTERISTIK:
+===============
+- Single-pass algorithm (hanya 1 iterasi)
+- Streaming-friendly (tidak perlu load semua data ke memory)
+- Deterministic output (hasil selalu sama untuk input yang sama)
+- Combiner-friendly (bisa dijalankan partial di mapper nodes)
+
+PENYESUAIAN UNTUK HADOOP:
+==========================
+Jika ingin menambahkan filtering (minimum support):
+
+    MINIMUM_SUPPORT ← 2  // Filter pasangan yang muncul minimal 2 kali
+    
+    // Ubah LANGKAH 6 menjadi:
+    JIKA current_key TIDAK NULL DAN current_key ≠ key MAKA:
+        JIKA current_count >= MINIMUM_SUPPORT MAKA:
+            PRINT current_key + "\t" + current_count
+"""
+
+```
