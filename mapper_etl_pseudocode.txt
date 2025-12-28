@@ -1,0 +1,90 @@
+# PSEUDOCODE MAPPER ETL - SISTEM REKOMENDASI PRODUK
+# Big Data dan Analitik (TIF522)
+
+"""
+PSEUDOCODE UNTUK MAPPER ETL FUNCTION
+=====================================
+
+ALGORITMA: TransactionItemExtractor
+INPUT: Baris data dari transaction_data.csv (format CSV)
+OUTPUT: Pasangan transaction_id dengan nama item (key-value pairs)
+
+PROSEDUR mapper_etl():
+    // LANGKAH 1: Inisialisasi
+    line_counter ← 0
+    
+    // LANGKAH 2: Proses Setiap Baris Input dari File CSV
+    UNTUK SETIAP line DALAM input stdin:
+        
+        // LANGKAH 3: Hapus whitespace di awal dan akhir
+        line ← line.TRIM()
+        
+        // LANGKAH 4: Skip baris kosong
+        JIKA line kosong MAKA:
+            LANJUT ke iterasi berikutnya
+        
+        // LANGKAH 5: Parsing Data CSV
+        TRY:
+            // Gunakan CSV reader untuk handle quoted fields
+            parts ← CSV_READER.PARSE(line)
+            
+            // LANGKAH 6: Deteksi dan Skip Header
+            // Header dapat memiliki BOM (Byte Order Mark) (\ufeff)
+            JIKA panjang(parts) < 2 ATAU 
+               parts[0].STRIP_BOM() == 'Transaction' MAKA:
+                LANJUT ke iterasi berikutnya
+            
+            // LANGKAH 7: Ekstrak Field yang Diperlukan
+            transaction_id ← parts[0]  // Kolom pertama
+            item_name ← parts[1]       // Kolom kedua
+            
+            // LANGKAH 8: Emit Key-Value Pair
+            // Format: transaction_id \t item_name
+            EMIT (transaction_id + "\t" + item_name)
+            
+        CATCH Exception AS e:
+            // LANGKAH 9: Error Handling
+            WRITE_TO_STDERR("Error processing line: {} | {}".format(line, e))
+            LANJUT ke iterasi berikutnya
+AKHIR PROSEDUR
+
+
+CONTOH EKSEKUSI:
+================
+
+INPUT (Baris dari CSV):
+"5,Bread"
+"5,Coffee"
+"5,Pastry"
+"6,Bread"
+"6,Milk"
+
+PROSES:
+Line 1: "5,Bread" → parts = ["5", "Bread"]
+        transaction_id = "5", item_name = "Bread"
+        EMIT "5\tBread"
+
+Line 2: "5,Coffee" → parts = ["5", "Coffee"]
+        transaction_id = "5", item_name = "Coffee"
+        EMIT "5\tCoffee"
+
+Line 3: "5,Pastry" → parts = ["5", "Pastry"]
+        transaction_id = "5", item_name = "Pastry"
+        EMIT "5\tPastry"
+
+Line 4: "6,Bread" → parts = ["6", "Bread"]
+        transaction_id = "6", item_name = "Bread"
+        EMIT "6\tBread"
+
+Line 5: "6,Milk" → parts = ["6", "Milk"]
+        transaction_id = "6", item_name = "Milk"
+        EMIT "6\tMilk"
+
+OUTPUT MAPPER ETL:
+5	Bread
+5	Coffee
+5	Pastry
+6	Bread
+6	Milk
+
+"""

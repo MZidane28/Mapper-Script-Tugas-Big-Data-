@@ -1,0 +1,111 @@
+# PSEUDOCODE REDUCER ETL - SISTEM REKOMENDASI PRODUK
+# Big Data dan Analitik (TIF522)
+
+"""
+PSEUDOCODE UNTUK REDUCER ETL FUNCTION
+======================================
+
+ALGORITMA: TransactionItemAggregator
+INPUT: Output dari mapper_etl (sorted transaction_id \t item pairs)
+OUTPUT: List item yang dikelompokkan per transaction_id (sorted alphabetically)
+
+PROSEDUR reducer_etl():
+    // LANGKAH 1: Inisialisasi Variabel
+    current_id ← NULL
+    items ← []  // Array kosong untuk menyimpan items dari transaksi
+    
+    // LANGKAH 2: Proses Setiap Baris Input dari Mapper ETL
+    UNTUK SETIAP line DALAM input stdin:
+        
+        // LANGKAH 3: Hapus whitespace di awal dan akhir
+        line ← line.TRIM()
+        
+        // LANGKAH 4: Skip baris kosong
+        JIKA line kosong MAKA:
+            LANJUT ke iterasi berikutnya
+        
+        // LANGKAH 5: Parse dan Ekstrak Data
+        TRY:
+            // Split berdasarkan TAB (separator antara key dan value)
+            SPLIT line BERDASARKAN '\t' dengan max_split=1
+            transaction_id ← parts[0]
+            item ← parts[1]
+            
+            // LANGKAH 6: Deteksi Perubahan Transaction ID
+            JIKA current_id TIDAK NULL DAN current_id ≠ transaction_id MAKA:
+                // LANGKAH 7a: Emit hasil untuk transaksi sebelumnya
+                items.SORT()  // Urutkan items secara alphabetical
+                output ← JOIN(items, ",")
+                PRINT output
+            
+            // LANGKAH 7b: Update transaction ID jika berbeda
+            JIKA current_id ≠ transaction_id MAKA:
+                current_id ← transaction_id
+                items ← []  // Reset array untuk transaksi baru
+            
+            // LANGKAH 8: Akumulasi Item ke dalam Array
+            items.APPEND(item)
+            
+        CATCH ValueError AS e:
+            // LANGKAH 9: Error Handling untuk format line yang salah
+            WRITE_TO_STDERR("Bad line: {}".format(line))
+            LANJUT ke iterasi berikutnya
+    
+    // LANGKAH 10: Emit Hasil Transaksi Terakhir
+    JIKA current_id TIDAK NULL DAN items TIDAK kosong MAKA:
+        items.SORT()  // Urutkan items secara alphabetical
+        output ← JOIN(items, ",")
+        PRINT output
+AKHIR PROSEDUR
+
+
+CONTOH EKSEKUSI:
+================
+
+INPUT (Output dari mapper_etl yang sudah di-sort):
+5	Bread
+5	Coffee
+5	Pastry
+6	Bread
+6	Milk
+6	Juice
+
+PROSES:
+Line 1: transaction_id = "5", item = "Bread"
+        current_id = NULL, bukan kondisi emit
+        current_id ← "5"
+        items ← ["Bread"]
+
+Line 2: transaction_id = "5", item = "Coffee"
+        current_id = "5", transaction_id sama
+        items ← ["Bread", "Coffee"]
+
+Line 3: transaction_id = "5", item = "Pastry"
+        current_id = "5", transaction_id sama
+        items ← ["Bread", "Coffee", "Pastry"]
+
+Line 4: transaction_id = "6", item = "Bread"
+        current_id = "5", transaction_id BERBEDA!
+        EMIT: items.SORT() = ["Bread", "Coffee", "Pastry"]
+              output = "Bread,Coffee,Pastry"
+              PRINT "Bread,Coffee,Pastry"
+        current_id ← "6"
+        items ← ["Bread"]
+
+Line 5: transaction_id = "6", item = "Milk"
+        current_id = "6", transaction_id sama
+        items ← ["Bread", "Milk"]
+
+Line 6: transaction_id = "6", item = "Juice"
+        current_id = "6", transaction_id sama
+        items ← ["Bread", "Milk", "Juice"]
+
+EOF: EMIT transaksi terakhir
+     items.SORT() = ["Bread", "Juice", "Milk"]
+     output = "Bread,Juice,Milk"
+     PRINT "Bread,Juice,Milk"
+
+OUTPUT REDUCER ETL:
+Bread,Coffee,Pastry
+Bread,Juice,Milk
+"""
